@@ -1,19 +1,31 @@
 import {
-  CalendarCheck2Icon,
   LibraryBigIcon,
+  CalendarCheck2Icon,
   LoaderIcon,
   SparklesIcon,
 } from "lucide-react";
 
 export default function Layout() {
   return (
-    <div>
-      <h1>Schedulr</h1>
-      <div className="relative bottom justify-between">
-        <LibraryBigIcon size={48} />
-        <CalendarCheck2Icon size={48} />
-        <LoaderIcon size={48} />
-        <SparklesIcon color="" size={48} />
+    <div className="min-h-screen bg-[#04160e] text-emerald-50">
+      <div className="flex items-center justify-between px-6 py-4">
+        <h1 className="text-2xl font-serif font-bold text-emerald-400">
+          Schedulr
+        </h1>
+        <div className="w-10 h-10 rounded-full border border-orange-400/50 flex items-center justify-center bg-emerald-900/30">
+          <span className="text-xs">S</span>
+        </div>
+      </div>
+
+      {/* // <main className="pb-24 px-6"> 
+      //   {children}
+      // </main> */}
+
+      <div className="fixed bottom-0 left-0 right-0 h-20 bg-emerald-950/80 backdrop-blur-lg border-t border-white/10 flex items-center justify-around px-4">
+        <LibraryBigIcon size={26} className="text-emerald-800" />
+        <CalendarCheck2Icon size={26} className="text-emerald-800" />
+        <LoaderIcon size={26} className="text-emerald-800" />
+        <SparklesIcon size={26} className="text-[#fbbd71]" />
       </div>
     </div>
   );
