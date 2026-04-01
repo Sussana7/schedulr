@@ -8,6 +8,13 @@ export default function Schedule() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
+  const [newTask, setNewTask] = useState({
+    title: "",
+    desc: "",
+    task_date: selectedDate.toISOString().split("T")[0],
+    time_range: "",
+  });
+
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }).map((_, i) => {
       const date = new Date();
@@ -38,13 +45,44 @@ export default function Schedule() {
       if (error) {
         console.error("Error fetching tasks:", error);
       } else {
-        setScheduleItems(data);
+        setScheduleItems(data || []);
       }
       setLoading(false);
     };
-
     fetchTasks();
   }, [selectedDate]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert([
+        {
+          title: newTask.title,
+          desc: newTask.desc,
+          task_date: newTask.task_date,
+          time_range: newTask.time_range,
+          // user_id removed because we are testing without Auth
+        },
+      ])
+      .select();
+
+    if (error) {
+      console.error("Save failed:", error.message);
+    } else if (data) {
+      setScheduleItems((prev) => [...prev, data[0]]);
+      setShowModal(false);
+      setNewTask({
+        title: "",
+        desc: "",
+        task_date: selectedDate.toISOString().split("T")[0],
+        time_range: "",
+      });
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="pb-32 px-6 space-y-8 relative">
@@ -71,11 +109,7 @@ export default function Schedule() {
               key={i}
               onClick={() => setSelectedDate(new Date(date))}
               className={`flex flex-col items-center p-4 rounded-3xl min-w-[70px] transition-all snap-center
-              ${
-                isSelected
-                  ? "bg-orange-200 text-emerald-950 shadow-[0_0_20px_rgba(253,186,116,0.3)] scale-110"
-                  : "bg-emerald-900/30 text-emerald-500"
-              }`}
+              ${isSelected ? "bg-orange-200 text-emerald-950 scale-110" : "bg-emerald-900/30 text-emerald-500"}`}
             >
               <span className="text-[10px] font-bold uppercase mb-1">
                 {dayName}
@@ -88,7 +122,6 @@ export default function Schedule() {
 
       <div className="space-y-6 relative">
         <div className="absolute left-3 top-0 bottom-0 w-[2px] bg-emerald-900/50 -z-10" />
-
         {scheduleItems.map((item) => (
           <div key={item.id} className="flex gap-6 items-start group">
             <div
@@ -127,75 +160,96 @@ export default function Schedule() {
 
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-28 right-8 w-14 h-14 rounded-full bg-orange-300 text-emerald-950 flex items-center justify-center shadow-lg shadow-orange-300/20 active:scale-90 transition-transform z-40"
+        className="fixed bottom-28 right-8 w-14 h-14 rounded-full bg-orange-300 text-emerald-950 flex items-center justify-center z-40"
       >
         <PlusIcon size={24} strokeWidth={3} />
       </button>
 
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-[#04160e] rounded-t-[3rem] p-8 pb-12 space-y-6 animate-in slide-in-from-bottom duration-300 shadow-2xl border-t border-emerald-500/20">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-2xl font-scholar text-emerald-50 tracking-tight">
+          <div className="w-full max-w-lg bg-[#04160e] rounded-t-[3rem] p-8 pb-12 space-y-6 animate-in slide-in-from-bottom duration-300 border-t border-emerald-500/20">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-scholar text-emerald-50">
                 Add New Schedulr Task
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-emerald-900/50 rounded-full transition-colors text-emerald-500/50 hover:text-emerald-500"
+                className="text-emerald-500/50 hover:text-emerald-500"
               >
                 <XCircleIcon size={28} />
               </button>
             </div>
 
             <form className="space-y-5">
-              <div className="space-y-2">
-                <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-[0.2em] uppercase">
+              <div>
+                <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-widest uppercase mb-2">
                   Task Title
                 </label>
                 <input
                   type="text"
+                  value={newTask.title}
+                  onChange={(e) =>
+                    setNewTask({ ...newTask, title: e.target.value })
+                  }
                   placeholder="e.g. Watch videos on AI"
-                  className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 outline-none transition-all placeholder:text-emerald-900"
+                  className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 outline-none"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-[0.2em] uppercase">
+              <div>
+                <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-widest uppercase mb-2">
                   Curator's Notes
                 </label>
                 <textarea
+                  value={newTask.desc}
+                  onChange={(e) =>
+                    setNewTask({ ...newTask, desc: e.target.value })
+                  }
                   placeholder="Brief details about your objective..."
-                  className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 min-h-[120px] outline-none transition-all resize-none font-noto placeholder:text-emerald-900"
+                  className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 min-h-[100px] outline-none resize-none font-noto"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-[0.2em] uppercase">
+                <div>
+                  <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-widest uppercase mb-2">
                     Deadline
                   </label>
                   <input
                     type="date"
-                    className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 outline-none transition-all"
+                    value={newTask.task_date}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, task_date: e.target.value })
+                    }
+                    className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 outline-none"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-[0.2em] uppercase">
+                <div>
+                  <label className="block text-scholar-gold font-noto text-[10px] font-bold tracking-widest uppercase mb-2">
                     Hours
                   </label>
                   <input
                     type="text"
+                    value={newTask.time_range}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, time_range: e.target.value })
+                    }
                     placeholder="08:00 AM — 10:00 AM"
-                    className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 outline-none transition-all placeholder:text-emerald-900"
+                    className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 outline-none"
                   />
                 </div>
               </div>
-            </form>
 
-            <button className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-orange-300 text-emerald-950 font-bold text-lg shadow-lg shadow-orange-300/20 active:scale-95 transition-all">
-              <Save size={20} />
-              <span>Save Task</span>
-            </button>
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-orange-300 text-emerald-950 font-bold text-lg active:scale-95 transition-all disabled:opacity-50"
+              >
+                <Save size={20} />
+                <span>{loading ? "Archiving..." : "Save Task"}</span>
+              </button>
+            </form>
           </div>
         </div>
       )}
