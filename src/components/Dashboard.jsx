@@ -73,6 +73,12 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+      <div className="fixed bottom-24 left-0 right-0 px-6 z-50">
+        <button className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-orange-300 text-emerald-950 font-bold shadow-lg shadow-orange-300/20 active:scale-95 transition-transform">
+          <Sparkles size={18} />
+          GENERATE MY PLAN
+        </button>
+      </div>
     </div>
   );
 }
