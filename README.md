@@ -40,6 +40,14 @@ To build a smart study planner that:
 
 ---
 
+## Screenshots of layout showing Schedule
+
+![schedule](image.png)
+
+![model to set a schedule](image-1.png)
+
+
+
 ## 📌 Status
 
 🚧 Work in progress — actively building and improving

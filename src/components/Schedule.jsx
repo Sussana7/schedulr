@@ -64,7 +64,6 @@ export default function Schedule() {
           desc: newTask.desc,
           task_date: newTask.task_date,
           time_range: newTask.time_range,
-          // user_id removed because we are testing without Auth
         },
       ])
       .select();
