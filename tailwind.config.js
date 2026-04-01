@@ -3,6 +3,10 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        scholar: ["Cinzel", "serif"],
+        noto: ["'Noto Serif'", "serif"],
+      },
       colors: {
         scholar: {
           bg: "#04160e",
