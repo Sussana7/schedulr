@@ -44,7 +44,16 @@ export default function Layout({ children }) {
           />
         </Link>
 
-        <LoaderIcon size={26} className="text-emerald-800" />
+        <Link to="/progress">
+          <LoaderIcon
+            size={26}
+            className={
+              location.pathname === "/progress"
+                ? "text-orange-300"
+                : "text-emerald-800"
+            }
+          />
+        </Link>
         <SparklesIcon size={26} className="text-[#fbbd71]" />
       </div>
     </div>

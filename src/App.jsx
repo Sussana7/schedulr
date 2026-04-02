@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import Schedule from "./components/Schedule";
-// import Progress from "./pages/Progress";
-// import PlanGenerator from "./pages/PlanGenerator";
+import Progress from "./components/Progress";
+// import PlanGenerator from "./components/PlanGenerator";
 
 function App() {
   return (
@@ -12,8 +12,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/schedule" element={<Schedule />} />
-          {/* <Route path="/progress" element={<Progress />} />
-          <Route path="/plan" element={<PlanGenerator />} /> */}
+          <Route path="/progress" element={<Progress />} />
+          {/* <Route path="/plan" element={<PlanGenerator />} /> */}
         </Routes>
       </Layout>
     </BrowserRouter>
