@@ -1,4 +1,10 @@
-import { CheckIcon, PlusIcon, Save, XCircleIcon } from "lucide-react";
+import {
+  CheckIcon,
+  EllipsisVertical,
+  PlusIcon,
+  Save,
+  XCircleIcon,
+} from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 
@@ -7,6 +13,7 @@ export default function Schedule() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
 
   const [newTask, setNewTask] = useState({
     title: "",
@@ -14,6 +21,7 @@ export default function Schedule() {
     task_date: selectedDate.toISOString().split("T")[0],
     startTime: "00:00",
     endTime: "00:00",
+    time_range: "",
     category: "General",
   });
 
@@ -61,42 +69,84 @@ export default function Schedule() {
 
     try {
       const startISO = new Date(
-        `${newTask.task_date}T${newTask.startTime}:00`,
+        `${newTask.task_date}T${newTask.startTime.trim()}:00`,
       ).toISOString();
       const endISO = new Date(
-        `${newTask.task_date}T${newTask.endTime}:00`,
+        `${newTask.task_date}T${newTask.endTime.trim()}:00`,
       ).toISOString();
+      const totalMinutes = Math.floor(
+        (new Date(endISO) - new Date(startISO)) / 60000,
+      );
 
-      // Calculate duration for the progress bar
-      const diffMs = new Date(endISO) - new Date(startISO);
-      const totalMinutes = Math.floor(diffMs / 60000);
+      const taskData = {
+        title: newTask.title,
+        desc: newTask.desc,
+        start_time: startISO,
+        end_time: endISO,
+        total_minutes: totalMinutes,
+        category: newTask.category,
+        task_date: newTask.task_date,
+        time_range: `${newTask.startTime} - ${newTask.endTime}`,
+      };
 
-      const { data, error } = await supabase
-        .from("tasks")
-        .insert([
-          {
-            title: newTask.title,
-            desc: newTask.desc,
-            start_time: startISO,
-            end_time: endISO,
-            total_minutes: totalMinutes,
-            category: newTask.category,
-            task_date: newTask.task_date,
-            time_range: `${newTask.startTime} - ${newTask.endTime}`,
-          },
-        ])
-        .select();
+      let result;
+      if (newTask.id) {
+        result = await supabase
+          .from("tasks")
+          .update(taskData)
+          .eq("id", newTask.id)
+          .select();
+      } else {
+        result = await supabase.from("tasks").insert([taskData]).select();
+      }
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
-      setScheduleItems((prev) => [...prev, data[0]]);
+      if (newTask.id) {
+        setScheduleItems((prev) =>
+          prev.map((t) => (t.id === newTask.id ? result.data[0] : t)),
+        );
+      } else {
+        setScheduleItems((prev) => [...prev, result.data[0]]);
+      }
+
       setShowModal(false);
-      setNewTask({ ...newTask, title: "", desc: "" });
+      resetForm();
     } catch (error) {
-      console.error("Save failed:", error.message);
+      console.error("Operation failed:", error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = async (id) => {
+    const { error } = await supabase.from("tasks").delete().eq("id", id);
+    if (!error) {
+      setScheduleItems((prev) => prev.filter((item) => item.id !== id));
+      setActiveMenuId(null);
+    }
+  };
+
+  const handleEdit = (item) => {
+    setNewTask({
+      ...item,
+      startTime: item.time_range.split("-")[0].trim(),
+      endTime: item.time_range.split("-")[1].trim(),
+    });
+    setShowModal(true);
+    setActiveMenuId(null);
+  };
+
+  const resetForm = () => {
+    setNewTask({
+      title: "",
+      desc: "",
+      task_date: selectedDate.toISOString().split("T")[0],
+      startTime: "00:00",
+      endTime: "00:00",
+      time_range: "",
+      category: "General",
+    });
   };
 
   return (
@@ -124,7 +174,7 @@ export default function Schedule() {
               key={i}
               onClick={() => setSelectedDate(new Date(date))}
               className={`flex flex-col items-center p-4 rounded-3xl min-w-[70px] transition-all snap-center
-              ${isSelected ? "bg-orange-200 text-emerald-950 scale-110" : "bg-emerald-900/30 text-emerald-500"}`}
+            ${isSelected ? "bg-orange-200 text-emerald-950 scale-110" : "bg-emerald-900/30 text-emerald-500"}`}
             >
               <span className="text-[10px] font-bold uppercase mb-1">
                 {dayName}
@@ -137,11 +187,12 @@ export default function Schedule() {
 
       <div className="space-y-6 relative">
         <div className="absolute left-3 top-0 bottom-0 w-[2px] bg-emerald-900/50 -z-10" />
+
         {scheduleItems.map((item) => (
-          <div key={item.id} className="flex gap-6 items-start group">
+          <div key={item.id} className="flex gap-6 items-start group relative">
             <div
               className={`mt-6 w-6 h-6 rounded-full border-2 flex items-center justify-center z-10 shrink-0
-              ${item.isCurrent ? "bg-emerald-950 border-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-emerald-900 border-emerald-800"}`}
+            ${item.isCurrent ? "bg-emerald-950 border-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-emerald-900 border-emerald-800"}`}
             >
               {item.isCurrent ? (
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -151,9 +202,37 @@ export default function Schedule() {
             </div>
 
             <div
-              className={`flex-1 p-6 rounded-[2rem] transition-all 
-              ${item.isCurrent ? "bg-emerald-900/40 border border-emerald-500/30 shadow-xl" : "bg-emerald-900/20 border border-transparent"}`}
+              className={`flex-1 p-6 rounded-[2rem] transition-all relative
+            ${item.isCurrent ? "bg-emerald-900/40 border border-emerald-500/30 shadow-xl" : "bg-emerald-900/20 border border-transparent"}`}
             >
+              <div className="absolute top-6 right-6">
+                <button
+                  onClick={() =>
+                    setActiveMenuId(activeMenuId === item.id ? null : item.id)
+                  }
+                  className="p-1 text-emerald-500/40 hover:text-orange-300 transition-colors"
+                >
+                  <EllipsisVertical size={20} />
+                </button>
+
+                {activeMenuId === item.id && (
+                  <div className="absolute right-0 mt-2 w-32 bg-[#04160e] border border-emerald-500/20 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="w-full text-left px-4 py-3 text-xs text-emerald-50 hover:bg-emerald-800/40"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="w-full text-left px-4 py-3 text-xs text-red-400 hover:bg-red-950/30 border-t border-emerald-500/10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-between items-start mb-2">
                 <span className="text-scholar-gold text-[10px] font-bold">
                   {item.time_range}
@@ -174,8 +253,11 @@ export default function Schedule() {
       </div>
 
       <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-28 right-8 w-14 h-14 rounded-full bg-orange-300 text-emerald-950 flex items-center justify-center z-40"
+        onClick={() => {
+          resetForm();
+          setShowModal(true);
+        }}
+        className="fixed bottom-28 right-8 w-14 h-14 rounded-full bg-orange-300 text-emerald-950 flex items-center justify-center z-40 shadow-lg active:scale-90 transition-transform"
       >
         <PlusIcon size={24} strokeWidth={3} />
       </button>

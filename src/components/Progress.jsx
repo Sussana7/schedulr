@@ -5,37 +5,110 @@ import { supabase } from "../supabaseClient";
 export const useCurrentTask = () => {
   const [activeTask, setActiveTask] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [dayStreak, setDayStreak] = useState(0);
+  const [velocity, setVelocity] = useState(0);
+
+  const calculateStreakLogic = (dates) => {
+    if (dates.length === 0) return 0;
+
+    let streak = 0;
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let checkDate = new Date(today);
+
+    // If no task finished today, check if one was finished yesterday to keep streak alive
+    if (dates[0] !== checkDate.toISOString().split("T")[0]) {
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    for (let i = 0; i < dates.length; i++) {
+      const dateStr = checkDate.toISOString().split("T")[0];
+      if (dates.includes(dateStr)) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  };
+
+  // Logic to calculate focus velocity compared to last week(For motivation purposes😌)
+  const calculateFocusVelocity = async () => {
+    const today = new Date();
+    const lastWeekStart = new Date(today);
+    lastWeekStart.setDate(today.getDate() - 14);
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("task_date")
+      .eq("is_completed", true)
+      .gte("task_date", lastWeekStart.toISOString().split("T")[0]);
+
+    if (data) {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(today.getDate() - 7);
+
+      const thisWeekTasks = data.filter(
+        (t) => new Date(t.task_date) >= oneWeekAgo,
+      ).length;
+      const lastWeekTasks = data.filter(
+        (t) => new Date(t.task_date) < oneWeekAgo,
+      ).length;
+
+      if (lastWeekTasks === 0) return thisWeekTasks > 0 ? 100 : 0;
+      const velocity = ((thisWeekTasks - lastWeekTasks) / lastWeekTasks) * 100;
+
+      return Math.round(velocity);
+    }
+    return 0;
+  };
 
   useEffect(() => {
-    const fetchActiveTask = async () => {
+    const fetchProgressData = async () => {
       const now = new Date().toISOString();
 
-      const { data, error } = await supabase
+      const { data: taskData } = await supabase
         .from("tasks")
         .select("*")
         .lte("start_time", now)
         .gte("end_time", now)
         .single();
 
-      if (data) {
-        setActiveTask(data);
-        const start = new Date(data.start_time);
-        const end = new Date(data.end_time);
-        const total = end - start;
+      if (taskData) {
+        setActiveTask(taskData);
+        const start = new Date(taskData.start_time);
+        const end = new Date(taskData.end_time);
         const elapsed = new Date() - start;
-        setProgress(Math.min(Math.floor((elapsed / total) * 100), 100));
+        setProgress(Math.min(Math.floor((elapsed / (end - start)) * 100), 100));
       } else {
         setActiveTask(null);
         setProgress(0);
       }
+
+      const { data: streakData } = await supabase
+        .from("tasks")
+        .select("task_date")
+        .eq("is_completed", true)
+        .order("task_date", { ascending: false });
+
+      if (streakData) {
+        const uniqueDates = [
+          ...new Set(streakData.map((item) => item.task_date)),
+        ];
+        setDayStreak(calculateStreakLogic(uniqueDates));
+      }
+
+      const velocityValue = await calculateFocusVelocity();
+      setVelocity(velocityValue);
     };
 
-    fetchActiveTask();
-    const interval = setInterval(fetchActiveTask, 30000);
+    fetchProgressData();
+    const interval = setInterval(fetchProgressData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  return { activeTask, progress };
+  return { activeTask, progress, dayStreak, velocity };
 };
 
 const ProgressCircle = ({
@@ -80,8 +153,11 @@ const ProgressCircle = ({
 };
 
 export default function Progress() {
-  const { activeTask, progress } = useCurrentTask();
-  const dayStreak = 14;
+  const { activeTask, progress, dayStreak, velocity } = useCurrentTask();
+
+  const statusText = velocity >= 0 ? "Excellent" : "Needs Focus";
+  const velocityColor = velocity >= 0 ? "text-emerald-400" : "text-orange-400";
+  const bgColor = velocity >= 0 ? "bg-emerald-400/10" : "bg-orange-400/10";
 
   return (
     <div className="pb-32 px-6 space-y-8 relative pt-8">
@@ -98,7 +174,10 @@ export default function Progress() {
           </div>
         </div>
         <div className="w-full h-1 bg-emerald-900/50 rounded-full overflow-hidden">
-          <div className="h-full bg-emerald-400" style={{ width: "70%" }} />
+          <div
+            className="h-full bg-emerald-400 transition-all duration-500"
+            style={{ width: `${Math.min((dayStreak / 7) * 100, 100)}%` }}
+          />
         </div>
       </section>
 
@@ -136,14 +215,18 @@ export default function Progress() {
         </h2>
         <div className="w-full rounded-[2.5rem] bg-emerald-900/20 border border-emerald-500/10 p-8 flex justify-between items-center">
           <div>
-            <p className="text-3xl font-scholar text-emerald-400">Excellent</p>
+            <p className={`text-3xl font-scholar ${velocityColor}`}>
+              {statusText}
+            </p>
             <div className="flex gap-2 mt-2">
-              <span className="text-[10px] bg-emerald-400/10 text-emerald-400 px-2 py-1 rounded-full">
-                +12% vs Last Week
+              <span
+                className={`text-[10px] ${bgColor} ${velocityColor} px-2 py-1 rounded-full`}
+              >
+                {velocity >= 0 ? `+${velocity}%` : `${velocity}%`} vs Last Week
               </span>
             </div>
           </div>
-          <TrendingUp size={48} className="text-emerald-400 opacity-20" />
+          <TrendingUp size={48} className={`${velocityColor} opacity-20`} />
         </div>
       </section>
     </div>
