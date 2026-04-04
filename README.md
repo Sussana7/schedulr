@@ -4,17 +4,7 @@ Schedulr is an AI-powered study planner designed to help students organize their
 
 ---
 
-## 🚀 Current Progress
-
-- ✅ Project setup with React + Vite  
-- ✅ Styled using Tailwind CSS  
-- ✅ Layout structure created (App layout + Dashboard)  
-- ✅ Dashboard UI started  
-- ✅ Supabase integrated for backend (auth & database)  
-
----
-
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Frontend:** React (Vite), Tailwind CSS  
 - **Backend:** Supabase  
@@ -23,7 +13,7 @@ Schedulr is an AI-powered study planner designed to help students organize their
 
 ---
 
-## 🎯 Goal
+##  Goal
 
 To build a smart study planner that:
 - Helps students organize courses and topics  
@@ -87,12 +77,14 @@ The primary interface for user productivity and task fulfillment.
 
 ---
 
-## Technical Skills Demonstrated
+###@ Technical Engineering
+Backend Orchestration: Managed real-time data synchronization and complex filtering with Supabase (PostgreSQL).
 
-- Backend Integration: Real-time CRUD operations with Supabase.
-- State Management: Complex usage of useState, useMemo, and useEffect for high-performance data fetching.
-- Custom Hooks: Encapsulated business logic into useCurrentTask to separate UI from data processing.
-- CSS Architecture: Advanced Tailwind CSS including custom animations (pulse), backdrop blurs, and glassmorphism.
+Algorithmic Data Handling: Developed custom logic for calculating rolling focus velocity and consecutive day streaks.
+
+Custom React Architecture: Engineered a modular system using Custom Hooks (useCurrentTask) to decouple business logic from the UI layer.
+
+Modern UI/UX: Implemented a "Scholar-themed" interface using Tailwind CSS, featuring glassmorphism, pulse animations, and responsive design.
 
 
 
