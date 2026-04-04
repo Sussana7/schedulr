@@ -12,7 +12,9 @@ export default function Schedule() {
     title: "",
     desc: "",
     task_date: selectedDate.toISOString().split("T")[0],
-    time_range: "",
+    startTime: "00:00",
+    endTime: "00:00",
+    category: "General",
   });
 
   const weekDays = useMemo(() => {
@@ -54,33 +56,47 @@ export default function Schedule() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!newTask.title || !newTask.startTime || !newTask.endTime) return;
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("tasks")
-      .insert([
-        {
-          title: newTask.title,
-          desc: newTask.desc,
-          task_date: newTask.task_date,
-          time_range: newTask.time_range,
-        },
-      ])
-      .select();
+    try {
+      const startISO = new Date(
+        `${newTask.task_date}T${newTask.startTime}:00`,
+      ).toISOString();
+      const endISO = new Date(
+        `${newTask.task_date}T${newTask.endTime}:00`,
+      ).toISOString();
 
-    if (error) {
-      console.error("Save failed:", error.message);
-    } else if (data) {
+      // Calculate duration for the progress bar
+      const diffMs = new Date(endISO) - new Date(startISO);
+      const totalMinutes = Math.floor(diffMs / 60000);
+
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert([
+          {
+            title: newTask.title,
+            desc: newTask.desc,
+            start_time: startISO,
+            end_time: endISO,
+            total_minutes: totalMinutes,
+            category: newTask.category,
+            task_date: newTask.task_date,
+            time_range: `${newTask.startTime} - ${newTask.endTime}`,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+
       setScheduleItems((prev) => [...prev, data[0]]);
       setShowModal(false);
-      setNewTask({
-        title: "",
-        desc: "",
-        task_date: selectedDate.toISOString().split("T")[0],
-        time_range: "",
-      });
+      setNewTask({ ...newTask, title: "", desc: "" });
+    } catch (error) {
+      console.error("Save failed:", error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -231,10 +247,17 @@ export default function Schedule() {
                   <input
                     type="text"
                     value={newTask.time_range}
-                    onChange={(e) =>
-                      setNewTask({ ...newTask, time_range: e.target.value })
-                    }
-                    placeholder="08:00 AM — 10:00 AM"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const parts = val.split("-").map((t) => t.trim());
+                      setNewTask({
+                        ...newTask,
+                        time_range: val,
+                        startTime: parts[0] || "00:00",
+                        endTime: parts[1] || "00:00",
+                      });
+                    }}
+                    placeholder="08:00 - 10:00"
                     className="bg-emerald-900/20 border border-emerald-800 focus:border-orange-300 rounded-2xl px-4 py-3 w-full text-emerald-50 outline-none"
                   />
                 </div>
