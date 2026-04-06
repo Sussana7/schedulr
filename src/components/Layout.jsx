@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LibraryBigIcon,
   CalendarCheck2Icon,
@@ -8,6 +8,7 @@ import {
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#04160e] text-emerald-50">
@@ -15,7 +16,10 @@ export default function Layout({ children }) {
         <h1 className="text-2xl font-serif font-bold text-emerald-400">
           Schedulr
         </h1>
-        <div className="w-10 h-10 rounded-full border border-orange-400/50 flex items-center justify-center bg-emerald-900/30">
+        <div
+          onClick={() => navigate("/login")}
+          className="w-10 h-10 rounded-full border border-orange-400/50 flex items-center justify-center bg-emerald-900/30"
+        >
           <span className="text-xs">S</span>
         </div>
       </div>

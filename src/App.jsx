@@ -3,19 +3,26 @@ import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import Schedule from "./components/Schedule";
 import Progress from "./components/Progress";
-// import PlanGenerator from "./components/PlanGenerator";
+import Login from "./components/Login";
 
 function App() {
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/progress" element={<Progress />} />
-          {/* <Route path="/plan" element={<PlanGenerator />} /> */}
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/*"
+          element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/schedule" element={<Schedule />} />
+                <Route path="/progress" element={<Progress />} />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 }
