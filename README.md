@@ -77,6 +77,43 @@ The primary interface for user productivity and task fulfillment.
 
 ---
 
+## Schedulr Login System
+
+### 1. Email & Password Login
+- Connected the login form to Supabase using `supabase.auth.signInWithPassword()`
+- Added controlled inputs with React state for email and password
+- Added a red error message box that shows Supabase error messages
+- Added a loading state ("VERIFYING...") on the submit button
+
+### 2. Facial Recognition Registration
+- Integrated face-api.js for in-browser AI face detection
+- Downloaded and set up 6 model files from vladmandic/face-api into `/public/models/`:
+  - tiny_face_detector_model-weights_manifest.json
+  - tiny_face_detector_model.bin
+  - face_landmark_68_model-weights_manifest.json
+  - face_landmark_68_model.bin
+  - face_recognition_model-weights_manifest.json
+  - face_recognition_model.bin
+- Configured models to load on mount using `import.meta.env.BASE_URL`
+- Camera opens, warms up for 2 seconds, then attempts detection up to 8 times
+- On success, saves the face descriptor (128-float array) to Supabase `profiles` table as `jsonb`
+
+### 3. Facial Recognition Login
+- Added a Login / Register toggle below the face scan button
+- In Login mode: captures live face, fetches stored descriptor from Supabase, compares using `faceapi.euclideanDistance()` — match threshold is 0.6
+- Fixed a bug where the parameter `liveDescriptor` was referenced instead of `descriptor`
+
+### 4. Supabase Database
+- Used the `profiles` table with columns: `id`, `email`, `face_descriptor (jsonb)`, `created_at`, linked to `auth.users.id`
+- Switched from `.update()` to `.upsert()` to fix a 406 error (row not found)
+- Re-enabled Row Level Security (RLS) on both `profiles` and `tasks` tables with proper policies
+
+### 5. Logout
+- Added a dropdown menu to the "S" avatar button in the header in `Layout.jsx`
+- Dropdown contains "Profile" and a red "Sign Out" button
+- Sign Out calls `supabase.auth.signOut()` and redirects to `/login`
+- Clicking outside the dropdown closes it
+
 ###@ Technical Engineering
 Backend Orchestration: Managed real-time data synchronization and complex filtering with Supabase (PostgreSQL).
 
@@ -85,9 +122,6 @@ Algorithmic Data Handling: Developed custom logic for calculating rolling focus 
 Custom React Architecture: Engineered a modular system using Custom Hooks (useCurrentTask) to decouple business logic from the UI layer.
 
 Modern UI/UX: Implemented a "Scholar-themed" interface using Tailwind CSS, featuring glassmorphism, pulse animations, and responsive design.
-
-
-
 
 ---
 
