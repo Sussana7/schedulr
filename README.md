@@ -114,7 +114,7 @@ The primary interface for user productivity and task fulfillment.
 - Sign Out calls `supabase.auth.signOut()` and redirects to `/login`
 - Clicking outside the dropdown closes it
 
-###@ Technical Engineering
+### Technical Engineering
 Backend Orchestration: Managed real-time data synchronization and complex filtering with Supabase (PostgreSQL).
 
 Algorithmic Data Handling: Developed custom logic for calculating rolling focus velocity and consecutive day streaks.
@@ -138,6 +138,10 @@ Modern UI/UX: Implemented a "Scholar-themed" interface using Tailwind CSS, featu
 ![schedule](image.png)
 
 ![model to set a schedule](image-1.png)
+
+## Screenshots of Login page
+
+<img width="957" height="876" alt="image" src="https://github.com/user-attachments/assets/f6725985-b079-4454-994c-6d770934bba0" />
 
 
 
