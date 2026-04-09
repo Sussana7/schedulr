@@ -20,6 +20,14 @@ const callGemini = async (prompt) => {
     }),
   });
 
+  if (response.status === 429) {
+    throw new Error("Too many requests. Please wait a moment and try again.");
+  }
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status}`);
+  }
+
   const data = await response.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 };
@@ -107,7 +115,6 @@ export default function Generator() {
         month: "long",
         day: "numeric",
       });
-
 
       const prompt = `
 You are an expert academic study planner AI called "Curator Intelligence" for a student productivity app called Schedulr.

@@ -78,6 +78,10 @@ export default function Schedule() {
         (new Date(endISO) - new Date(startISO)) / 60000,
       );
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const taskData = {
         title: newTask.title,
         desc: newTask.desc,
@@ -87,6 +91,7 @@ export default function Schedule() {
         category: newTask.category,
         task_date: newTask.task_date,
         time_range: `${newTask.startTime} - ${newTask.endTime}`,
+        user_id: user.id,
       };
 
       let result;
