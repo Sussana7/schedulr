@@ -114,6 +114,15 @@ The primary interface for user productivity and task fulfillment.
 - Sign Out calls `supabase.auth.signOut()` and redirects to `/login`
 - Clicking outside the dropdown closes it
 
+### 6. AI Generator Page
+- Built Generator.jsx — a full AI-powered study planner page
+- Fetches all incomplete tasks from today onwards from Supabase on mount
+- Calculates risk level (LOW / MEDIUM / HIGH) from overdue task count before generation
+- Sends tasks to Google Gemini 2.0 Flash via the Generative Language API with a structured prompt that returns strict JSON
+- Gemini returns a prioritized task list with suggested time blocks, priority badges, overdue flags, a reason per task, a - - personalized Curator's Tip, and a risk summary
+- Added proper error handling for 429 rate limit errors and JSON parse failures
+- Added a Regenerate button after plan is shown
+
 ### Technical Engineering
 Backend Orchestration: Managed real-time data synchronization and complex filtering with Supabase (PostgreSQL).
 
