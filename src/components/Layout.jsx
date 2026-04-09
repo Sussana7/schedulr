@@ -103,7 +103,16 @@ export default function Layout({ children }) {
           />
         </Link>
 
-        <SparklesIcon size={26} className="text-[#fbbd71]" />
+        <Link to="/generator">
+          <SparklesIcon
+            size={26}
+            className={
+              location.pathname === "/generator"
+                ? "text-orange-300"
+                : "text-emerald-800"
+            }
+          />
+        </Link>
       </div>
     </div>
   );

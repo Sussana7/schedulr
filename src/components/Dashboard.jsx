@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { Sparkles, Check } from "lucide-react";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTasks();
@@ -73,7 +76,10 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
-      <div className="fixed bottom-24 left-0 right-0 px-6 z-50">
+      <div
+        onClick={() => navigate("/generator")}
+        className="fixed bottom-24 left-0 right-0 px-6 z-50"
+      >
         <button className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-orange-300 text-emerald-950 font-bold shadow-lg shadow-orange-300/20 active:scale-95 transition-transform">
           <Sparkles size={18} />
           GENERATE MY PLAN

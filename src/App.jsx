@@ -4,6 +4,7 @@ import Dashboard from "./components/Dashboard";
 import Schedule from "./components/Schedule";
 import Progress from "./components/Progress";
 import Login from "./components/Login";
+import Generator from "./components/Generator";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/progress" element={<Progress />} />
+                <Route path="/generator" element={<Generator />} />
               </Routes>
             </Layout>
           }
